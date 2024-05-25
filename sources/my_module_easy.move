@@ -89,13 +89,15 @@ module my_first_package::my_module1 {
         let burnAmount: u256;
         if(winner) {
             burnAmount = (total.downBalance / 10) * 8;
-            total.downBalance = burnAmount
+            // 토탈 오브젝트에 실제로 토큰 수량 주는거면 다시한번 봐야됨. 이건 기록된 수량 변경방법
+            total.downBalance = total.downBalance - burnAmount
+            // burn(address, burnAmount) 
+
         } else {
             burnAmount = (total.upBalance / 10) * 8;
-            total.upBalance = burnAmount
-        } // 맵핑 있으면 - result 0 or 1 로 바꿔서 if 없이 
-
-        // burn  burnAmount    
+            total.upBalance = total.upBalance - burnAmount
+            // burn(address, burnAmount) 
+        } 
     }
 
     public fun claim(game: &Game, userInfo: UserInfo) {
