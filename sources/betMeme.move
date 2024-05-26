@@ -1,7 +1,7 @@
 module my_first_package::beteMeme {
     use sui::clock::{Clock};
     use sui::event;
-    use sui::coin::{Self, Coin, TreasuryCap};
+    use sui::coin::{Self, Coin};
     use sui::balance::{Self, Balance};
 
     public struct GameOwnerCap has key { id: UID }
@@ -28,7 +28,6 @@ module my_first_package::beteMeme {
 
     public struct DownBalance has key {
         id: UID,
-        treasury_cap: TreasuryCap<FUD>,
         balance: Balance<FUD>,
     }
 
@@ -106,22 +105,22 @@ module my_first_package::beteMeme {
     }
 
     // onlyOwner
-    public fun endGameUp(_: &GameOwnerCap, up: &mut UpBalance, game: &mut Game) {
+    public fun endGameWinnerUp(_: &GameOwnerCap, down: &mut DownBalance, game: &mut Game) {
         assert!(game.end == false, 403); // "already end"
         game.end = true;
-        game.winner = true;
-       
-        let _burnAmount = balance::split(&mut up.balance, (balance::value(&up.balance) / 10) * 8);
+        game.winner = true; // up 승리
+     
+        let _burnAmount = balance::split(&mut down.balance, (balance::value(&down.balance) / 10) * 8);
         // 이러면 burnAmount 만큼의 수량은 따로 저장 안해서 날라갈듯?
     }
 
     // onlyOwner
-    public fun endGameDown(_: &GameOwnerCap, down: &mut DownBalance, game: &mut Game) {
+    public fun endGameWinnerDown(_: &GameOwnerCap, up: &mut UpBalance, game: &mut Game) {
         assert!(game.end == false, 403); // "already end"
         game.end = true;
-        game.winner = false;
-     
-        let _burnAmount = balance::split(&mut down.balance, (balance::value(&down.balance) / 10) * 8);
+        game.winner = false; // down 승리
+       
+        let _burnAmount = balance::split(&mut up.balance, (balance::value(&up.balance) / 10) * 8);
         // 이러면 burnAmount 만큼의 수량은 따로 저장 안해서 날라갈듯?
     }
 
