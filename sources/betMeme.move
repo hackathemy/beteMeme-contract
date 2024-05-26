@@ -58,8 +58,10 @@ module my_first_package::beteMeme {
         }
     }
 
-    public entry fun betUp(wallet: &mut Coin<FUD>, up: &mut UpBalance, fee: &mut FeeAdd, game: &Game, amount: u64, ctx: &mut TxContext) {
-        assert!(game.end == true, 403); // "game is end"
+    public entry fun betUp(wallet: &mut Coin<FUD>, user: UserInfo, clock: &Clock, up: &mut UpBalance, fee: &mut FeeAdd, game: &Game, amount: u64, ctx: &mut TxContext) {
+        assert!(game.end == false, 403); // "game is end"
+        assert!(clock.timestamp_ms() > game.startTime + 86400000, 403); // 배팅 제한 시간
+        assert!(user.betAmount == 0, 403);
         let coins_to_trade = balance::split(coin::balance_mut(wallet), amount);
         // 1% fee.
         let fees = balance::split(&mut coins_to_trade, amount / 100);
@@ -72,7 +74,7 @@ module my_first_package::beteMeme {
 
         transfer::transfer(UserInfo {
             id: uid,
-            betUp:  true,
+            betUp: true,
             betAmount: amount,
         }, ctx.sender());
 
@@ -81,8 +83,11 @@ module my_first_package::beteMeme {
         });
     }
 
-    public entry fun betDown(wallet: &mut Coin<FUD>, down: &mut DownBalance, fee: &mut FeeAdd, game: &Game, amount: u64, ctx: &mut TxContext) {
-        assert!(game.end == true, 403); // "game is end"
+    public entry fun betDown(wallet: &mut Coin<FUD>, user: UserInfo, clock: &Clock, down: &mut DownBalance, fee: &mut FeeAdd, game: &Game, amount: u64, ctx: &mut TxContext) {
+        assert!(game.end == false, 403); // "game is end"
+        assert!(clock.timestamp_ms() > game.startTime + 86400000, 403); // 배팅 제한 시간
+        assert!(user.betAmount == 0, 403);
+
         let coins_to_trade = balance::split(coin::balance_mut(wallet), amount);
         // 1% fee. 바로 특정 주소로 보내도 됨
         let fees = balance::split(&mut coins_to_trade, amount / 100);
@@ -95,7 +100,7 @@ module my_first_package::beteMeme {
 
         transfer::transfer(UserInfo {
             id: uid,
-            betUp:  true,
+            betUp: false,
             betAmount: amount,
         }, ctx.sender());
 
@@ -131,9 +136,21 @@ module my_first_package::beteMeme {
         let withdrawal: Balance<FUD>;
 
         if(userInfo.betUp){
-            withdrawal = balance::split(&mut up.balance, amount);
+            let _upBalance = balance::value(&up.balance);
+            assert!(0 < _upBalance, 403);
+            if(_upBalance < amount){
+                withdrawal = balance::split(&mut up.balance, _upBalance);
+            } else {
+                withdrawal = balance::split(&mut up.balance, amount);
+            }
         } else {
-            withdrawal = balance::split(&mut down.balance, amount);
+            let _downBalance = balance::value(&down.balance);
+            assert!(0 < _downBalance, 403);
+            if(_downBalance < amount){
+                withdrawal = balance::split(&mut down.balance, _downBalance);
+            } else {
+                withdrawal = balance::split(&mut down.balance, amount);
+            }
         };
 
         // 배팅한 금액 전부 주면 진팀은 20%만 인출 가능
