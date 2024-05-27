@@ -156,7 +156,7 @@ module my_first_package::beteMeme {
 
         event::emit(BurnEvent {
             id,
-            burnSide: false,
+            burnSide: true,
             burnAmount: burn,
         });
     }
