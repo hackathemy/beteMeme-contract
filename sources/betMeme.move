@@ -33,12 +33,20 @@ module my_first_package::beteMeme {
 
     public struct UserInfo has key { // ??????????
         id: UID,
-        betUp: bool, // 승리에 배팅 up, 패배에 배팅 down
+        betUp: bool, // 승리에 배팅 true, 패배에 배팅 false
         betAmount: u64,
     }
 
     public struct BetEvent has copy, drop {
         id: ID,
+        betUp: bool, // 승리에 배팅 true, 패배에 배팅 false
+        betAmount: u64,
+    }
+
+    public struct BurnEvent has copy, drop {
+        id: ID,
+        burnSide: bool, // 승리쪽 burn true, 패배쪽 burn false
+        burnAmount: u64,
     }
 
     fun init(ctx: &mut TxContext) {
@@ -79,7 +87,9 @@ module my_first_package::beteMeme {
         }, ctx.sender());
 
         event::emit(BetEvent {
-            id
+            id,
+            betUp: true,
+            betAmount: amount,
         });
     }
 
@@ -105,28 +115,50 @@ module my_first_package::beteMeme {
         }, ctx.sender());
 
         event::emit(BetEvent {
-            id
+            id,
+            betUp: false,
+            betAmount: amount,
         });
     }
 
     // onlyOwner
-    public fun endGameWinnerUp(_: &GameOwnerCap, down: &mut DownBalance, game: &mut Game) {
+    public fun endGameWinnerUp(_: &GameOwnerCap, down: &mut DownBalance, game: &mut Game, ctx: &mut TxContext) {
         assert!(game.end == false, 403); // "already end"
         game.end = true;
         game.winner = true; // up 승리
      
         let _burnAmount = balance::split(&mut down.balance, (balance::value(&down.balance) / 10) * 8);
         // 이러면 burnAmount 만큼의 수량은 따로 저장 안해서 날라갈듯?
+
+        let uid = object::new(ctx);
+        let id = object::uid_to_inner(&uid);
+        let burn = balance::value(&_burnAmount);
+
+        event::emit(BurnEvent {
+            id,
+            burnSide: false,
+            burnAmount: burn,
+        });
     }
 
     // onlyOwner
-    public fun endGameWinnerDown(_: &GameOwnerCap, up: &mut UpBalance, game: &mut Game) {
+    public fun endGameWinnerDown(_: &GameOwnerCap, up: &mut UpBalance, game: &mut Game, ctx: &mut TxContext) {
         assert!(game.end == false, 403); // "already end"
         game.end = true;
         game.winner = false; // down 승리
        
         let _burnAmount = balance::split(&mut up.balance, (balance::value(&up.balance) / 10) * 8);
         // 이러면 burnAmount 만큼의 수량은 따로 저장 안해서 날라갈듯?
+
+        let uid = object::new(ctx);
+        let id = object::uid_to_inner(&uid);
+        let burn = balance::value(&_burnAmount);
+
+        event::emit(BurnEvent {
+            id,
+            burnSide: false,
+            burnAmount: burn,
+        });
     }
 
     public entry fun claim(game: &Game, up: &mut UpBalance, down: &mut DownBalance, userInfo: UserInfo, ctx: &mut TxContext) {
