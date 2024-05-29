@@ -37,7 +37,6 @@ module betmeme::betmeme {
 
     public entry fun bet<T>(game: &mut Game<T>, clock: &Clock, betUp: bool, coin: Coin<T>, ctx: &mut TxContext) {
         assert!(game.startTime + game.duration > clock.timestamp_ms(), 403);
-
         let amount = balance::value(coin.balance());
         if (betUp) {
             game.upBalance.join(coin.into_balance());
@@ -56,6 +55,8 @@ module betmeme::betmeme {
     }
 
     public entry fun gameEnd<T>(game: &mut Game<T>, clock: &Clock, lastPrice: u64, ctx: &mut TxContext) {
+        // 이거 잘 되는지 확인 필요
+        // 
         assert!(game.startTime + game.duration > clock.timestamp_ms(), 403);
         game.lastPrice = lastPrice;
         if (game.lastPrice > game.markedPrice) {
@@ -74,6 +75,9 @@ module betmeme::betmeme {
     }
 
     public entry fun claim<T>(game: &mut Game<T>, userBet: UserBet, ctx: &mut TxContext) {
+        // assert!(game.startTime + game.duration < clock.timestamp_ms(), 403);
+        // lastprice가 없으면 안되도록 수정 
+        // 조건 맞는지 확인 필요
         let amount = userBet.amount;
 
         if(userBet.betUp){
