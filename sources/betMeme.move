@@ -148,6 +148,7 @@ module betmeme::betmeme {
     }
 
     // 진팀 물량의 30퍼 먹기 선착순(업 다운 모두 참여가능)
+    // 이거 하면 claim 못하니까 안내 잘 해줘야함
     public entry fun callenge<T>(game: &mut Game<T>, userBet: UserBet, ctx: &mut TxContext) {
         assert!(game.lastPrice != 0, 403); // 종료가격 셋팅 이후 클레임 가능
 
