@@ -119,7 +119,7 @@ module betmeme::betmeme {
             let withdraw = balance::split(&mut game.upBalance, amount);
 
             let rate = game.upAmount / amount;
-            let reward = game.downAmount / 100 * rate;
+            let reward = game.downAmount / rate;
             let get = balance::split(&mut game.downBalance, reward);
 
             let coin = coin::from_balance(withdraw, ctx);
@@ -133,7 +133,7 @@ module betmeme::betmeme {
             let withdraw = balance::split(&mut game.downBalance, amount);
 
             let rate = game.downAmount / amount;
-            let reward = game.upAmount / 100 * rate;
+            let reward = game.upAmount / rate;
             let get = balance::split(&mut game.upBalance, reward);
 
             let coin = coin::from_balance(withdraw, ctx);
