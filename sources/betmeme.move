@@ -67,7 +67,7 @@ module betmeme::betmeme {
     }
 
     public entry fun gameEnd<T>(game: &mut Game<T>, clock: &Clock, lastPrice: u64, ctx: &mut TxContext) {
-        assert!(game.startTime + game.duration > clock.timestamp_ms(), 403);
+        assert!(game.startTime + game.duration + 60000 < clock.timestamp_ms(), 403);
         game.lastPrice = lastPrice;
         if (game.lastPrice > game.markedPrice) {
             let amount = balance::value(&game.downBalance);
@@ -97,7 +97,7 @@ module betmeme::betmeme {
     // 이긴사람만 클레임 가능
     public entry fun claim<T>(game: &mut Game<T>, userBet: &mut UserBet, clock: &Clock, ctx: &mut TxContext) {
         // 배팅 종료 후 하루 뒤
-        assert!(game.startTime + game.duration  + 86400000 < clock.timestamp_ms(), 403);
+        assert!(game.startTime + game.duration  + 60000 < clock.timestamp_ms(), 403);
         // lastprice가 없으면 안되도록 수정 
         assert!(game.lastPrice != 0, 403);
         assert!(userBet.amount != 0, 403);
@@ -114,8 +114,6 @@ module betmeme::betmeme {
 
         // 50퍼 먹은걸 잘 분배해야됨 
         if(userBet.betUp){
-            let _upBalance = balance::value(&game.upBalance);
-            assert!(0 <= _upBalance, 403);
             let withdraw = balance::split(&mut game.upBalance, amount);
 
             let rate = game.upAmount / amount;
@@ -128,8 +126,6 @@ module betmeme::betmeme {
             transfer::public_transfer(coin, tx_context::sender(ctx));
             transfer::public_transfer(coin1, tx_context::sender(ctx));
         } else {
-            let _downBalance = balance::value(&game.downBalance);
-            assert!(0 <= _downBalance, 403);
             let withdraw = balance::split(&mut game.downBalance, amount);
 
             let rate = game.downAmount / amount;
@@ -152,7 +148,6 @@ module betmeme::betmeme {
     public entry fun callenge<T>(game: &mut Game<T>, userBet: UserBet, ctx: &mut TxContext) {
         // 종료가격 셋팅 이후 callenge 가능
         assert!(game.lastPrice != 0, 403); 
-
         let _getBalance = balance::value(&game.prizeBalance);
         assert!(_getBalance != 0); 
         if(_getBalance > game.minAmount / 100){
